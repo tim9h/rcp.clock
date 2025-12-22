@@ -8,8 +8,8 @@ import org.apache.logging.log4j.Logger;
 import com.google.inject.Inject;
 
 import dev.tim9h.rcp.logging.InjectLogger;
-import dev.tim9h.rcp.spi.CCard;
 import dev.tim9h.rcp.spi.Gravity;
+import dev.tim9h.rcp.spi.Plugin;
 import dev.tim9h.rcp.spi.Position;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -17,7 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
-public class ClockView implements CCard {
+public class ClockView implements Plugin {
 
 	@InjectLogger
 	private Logger logger;

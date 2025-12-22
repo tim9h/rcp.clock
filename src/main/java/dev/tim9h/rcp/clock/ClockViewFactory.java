@@ -4,10 +4,10 @@ import java.util.Map;
 
 import com.google.inject.Inject;
 
-import dev.tim9h.rcp.spi.CCard;
-import dev.tim9h.rcp.spi.CCardFactory;
+import dev.tim9h.rcp.spi.Plugin;
+import dev.tim9h.rcp.spi.PluginFactory;
 
-public class ClockViewFactory implements CCardFactory {
+public class ClockViewFactory implements PluginFactory {
 
 	static final String SETTING_DATEFORMAT = "clock.dateformat.right";
 
@@ -22,7 +22,7 @@ public class ClockViewFactory implements CCardFactory {
 	}
 
 	@Override
-	public CCard createCCard() {
+	public Plugin create() {
 		return clockView;
 	}
 

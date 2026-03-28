@@ -23,7 +23,7 @@ public class TimeProperty extends SimpleStringProperty {
 
 	private String getCurrentTimeFormatted() {
 		if (formatter == null) {
-			formatter = DateTimeFormatter.ofPattern(settings.getString(ClockViewFactory.SETTING_TIMEFORMAT));
+			formatter = DateTimeFormatter.ofPattern(settings.getString(ClockView.SETTING_TIMEFORMAT));
 		}
 		return LocalTime.now().format(formatter);
 	}

@@ -1,6 +1,7 @@
 package dev.tim9h.rcp.clock;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 
 public class ClockView implements Plugin {
+
+	static final String SETTING_DATEFORMAT = "clock.dateformat.right";
+
+	static final String SETTING_TIMEFORMAT = "clock.dateformat.left";
 
 	@InjectLogger
 	private Logger logger;
@@ -73,6 +78,11 @@ public class ClockView implements Plugin {
 	public void onSettingsChanged() {
 		timeProperty.resetFormatter();
 		dateProperty.resetFormatter();
+	}
+
+	@Override
+	public Map<String, String> getSettingsContributions() {
+		return Map.of(SETTING_DATEFORMAT, "EEEE, dd.MM.yyyy", SETTING_TIMEFORMAT, "HH:mm:ss");
 	}
 
 }

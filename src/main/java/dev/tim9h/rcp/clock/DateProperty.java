@@ -33,7 +33,7 @@ public class DateProperty extends SimpleStringProperty {
 
 	private String getCurrentDateFormatted() {
 		if (formatter == null) {
-			formatter = DateTimeFormatter.ofPattern(settings.getString(ClockViewFactory.SETTING_DATEFORMAT));
+			formatter = DateTimeFormatter.ofPattern(settings.getString(ClockView.SETTING_DATEFORMAT));
 		}
 		return LocalDate.now().format(formatter);
 	}

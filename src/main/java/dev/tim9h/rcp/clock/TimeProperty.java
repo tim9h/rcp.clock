@@ -1,9 +1,9 @@
 package dev.tim9h.rcp.clock;
 
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import com.google.inject.Inject;
@@ -16,7 +16,7 @@ public class TimeProperty extends SimpleStringProperty {
 
 	private DateTimeFormatter formatter;
 
-	private Timer timer;
+	private ScheduledFuture<?> task;
 
 	@Inject
 	private Settings settings;
@@ -25,23 +25,19 @@ public class TimeProperty extends SimpleStringProperty {
 		if (formatter == null) {
 			formatter = DateTimeFormatter.ofPattern(settings.getString(ClockView.SETTING_TIMEFORMAT));
 		}
-		return LocalTime.now().format(formatter);
+		return LocalTime.now(ZoneId.systemDefault()).format(formatter);
 	}
 
-	public void wake() {
-		timer = new Timer("clockUpdater");
-		timer.scheduleAtFixedRate(new TimerTask() {
-
-			@Override
-			public void run() {
-				Platform.runLater(() -> TimeProperty.this.set(getCurrentTimeFormatted()));
-			}
-		}, 0, TimeUnit.MILLISECONDS.convert(1, TimeUnit.SECONDS));
+	public synchronized void wake() {
+		sleep();
+		task = ClockScheduler.INSTANCE.scheduleAtFixedRate(
+				() -> Platform.runLater(() -> set(getCurrentTimeFormatted())), 0, 1, TimeUnit.SECONDS);
 	}
 
-	public void sleep() {
-		if (timer != null) {
-			timer.cancel();
+	public synchronized void sleep() {
+		if (task != null) {
+			task.cancel(false);
+			task = null;
 		}
 	}
 

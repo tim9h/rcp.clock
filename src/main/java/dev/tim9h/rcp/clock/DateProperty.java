@@ -1,10 +1,11 @@
 package dev.tim9h.rcp.clock;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import com.google.inject.Inject;
@@ -17,40 +18,46 @@ public class DateProperty extends SimpleStringProperty {
 
 	private DateTimeFormatter formatter;
 
-	private Calendar midnight;
+	private ScheduledFuture<?> task;
 
-	private Timer timer;
+	private boolean active;
 
 	@Inject
 	private Settings settings;
-
-	public DateProperty() {
-		midnight = Calendar.getInstance();
-		midnight.set(Calendar.HOUR_OF_DAY, 0);
-		midnight.set(Calendar.MINUTE, 0);
-		midnight.set(Calendar.SECOND, 0);
-	}
 
 	private String getCurrentDateFormatted() {
 		if (formatter == null) {
 			formatter = DateTimeFormatter.ofPattern(settings.getString(ClockView.SETTING_DATEFORMAT));
 		}
-		return LocalDate.now().format(formatter);
+		return LocalDate.now(ZoneId.systemDefault()).format(formatter);
 	}
 
-	public void wake() {
-		timer = new Timer("dateUpdater");
-		timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				Platform.runLater(() -> DateProperty.this.set(getCurrentDateFormatted()));
-			}
-		}, midnight.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
+	public synchronized void wake() {
+		sleep();
+		active = true;
+		Platform.runLater(() -> set(getCurrentDateFormatted()));
+		scheduleNextMidnight();
 	}
 
-	public void sleep() {
-		if (timer != null) {
-			timer.cancel();
+	private synchronized void scheduleNextMidnight() {
+		if (!active) {
+			return;
+		}
+		var zone = ZoneId.systemDefault();
+		var now = ZonedDateTime.now(zone);
+		var nextMidnight = now.toLocalDate().plusDays(1).atStartOfDay(zone);
+		var delayMillis = Duration.between(now, nextMidnight).toMillis() + 100;
+		task = ClockScheduler.INSTANCE.schedule(() -> {
+			Platform.runLater(() -> set(getCurrentDateFormatted()));
+			scheduleNextMidnight();
+		}, delayMillis, TimeUnit.MILLISECONDS);
+	}
+
+	public synchronized void sleep() {
+		active = false;
+		if (task != null) {
+			task.cancel(false);
+			task = null;
 		}
 	}
 

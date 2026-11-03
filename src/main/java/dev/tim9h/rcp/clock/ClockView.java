@@ -46,6 +46,8 @@ public class ClockView implements Plugin {
 
 	private boolean hasNextEvent;
 
+	private boolean calendarEventReceived;
+
 	private Label lblNext = new Label("📆 NEXT ");
 
 	private Label lblNextEvent = new Label();
@@ -94,8 +96,8 @@ public class ClockView implements Plugin {
 		lblNoEvent.setAlignment(Pos.CENTER);
 		lblNoEvent.setMaxWidth(Double.MAX_VALUE);
 		lblNoEvent.setTextOverrun(OverrunStyle.ELLIPSIS);
-		lblNoEvent.setVisible(!hasNextEvent);
-		lblNoEvent.setManaged(!hasNextEvent);
+		lblNoEvent.setVisible(calendarEventReceived && !hasNextEvent);
+		lblNoEvent.setManaged(calendarEventReceived && !hasNextEvent);
 		var eventContent = new StackPane(lblNoEvent, eventGroup);
 		StackPane.setAlignment(lblNoEvent, Pos.CENTER);
 		StackPane.setAlignment(eventGroup, Pos.CENTER);
@@ -116,6 +118,7 @@ public class ClockView implements Plugin {
 	public void initBus(EventManager eventManager) {
 		Plugin.super.initBus(eventManager);
 		eventManager.listen(Event.EVENT_CALENDAR_NEXT_EVENT, event -> {
+			calendarEventReceived = true;
 			hasNextEvent = event != null;
 			updateEventVisibility();
 			nextEventProperty.set(formatNextEvent(event));
@@ -123,12 +126,14 @@ public class ClockView implements Plugin {
 	}
 
 	private void updateEventVisibility() {
-		lblNext.setVisible(hasNextEvent);
-		lblNext.setManaged(hasNextEvent);
-		lblNextEvent.setVisible(hasNextEvent);
-		lblNextEvent.setManaged(hasNextEvent);
-		lblNoEvent.setVisible(!hasNextEvent);
-		lblNoEvent.setManaged(!hasNextEvent);
+		var showNextEvent = calendarEventReceived && hasNextEvent;
+		var showNoEvent = calendarEventReceived && !hasNextEvent;
+		lblNext.setVisible(showNextEvent);
+		lblNext.setManaged(showNextEvent);
+		lblNextEvent.setVisible(showNextEvent);
+		lblNextEvent.setManaged(showNextEvent);
+		lblNoEvent.setVisible(showNoEvent);
+		lblNoEvent.setManaged(showNoEvent);
 	}
 
 	private String formatNextEvent(Object[] event) {

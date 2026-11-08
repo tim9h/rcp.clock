@@ -1,12 +1,10 @@
 package dev.tim9h.rcp.clock;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import org.apache.logging.log4j.Logger;
 
@@ -18,6 +16,7 @@ import dev.tim9h.rcp.logging.InjectLogger;
 import dev.tim9h.rcp.spi.Gravity;
 import dev.tim9h.rcp.spi.Plugin;
 import dev.tim9h.rcp.spi.Position;
+import dev.tim9h.rcp.util.SvgIconUtil;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
@@ -31,8 +30,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.SVGPath;
 
 public class ClockView implements Plugin {
-
-	private static final Pattern SVG_PATH = Pattern.compile("<path[^>]* d=\"([^\"]+)\"");
 
 	private static final double ICON_SCALE = 16.0 / 24;
 
@@ -136,22 +133,9 @@ public class ClockView implements Plugin {
 	}
 
 	private SVGPath loadSvgIcon(String resourcePath, Label label) throws IOException {
-		try (var input = getClass().getResourceAsStream(resourcePath)) {
-			if (input == null) {
-				throw new IOException("Missing SVG resource: " + resourcePath);
-			}
-			var svg = new String(input.readAllBytes(), StandardCharsets.UTF_8);
-			var matcher = SVG_PATH.matcher(svg);
-			if (!matcher.find()) {
-				throw new IOException("Invalid SVG resource: " + resourcePath);
-			}
-			var icon = new SVGPath();
-			icon.setContent(matcher.group(1));
-			icon.setScaleX(ICON_SCALE);
-			icon.setScaleY(ICON_SCALE);
-			icon.fillProperty().bind(label.textFillProperty());
-			return icon;
-		}
+		var icon = SvgIconUtil.loadPath(getClass().getResourceAsStream(resourcePath), resourcePath, ICON_SCALE);
+		icon.fillProperty().bind(label.textFillProperty());
+		return icon;
 	}
 
 	@Override

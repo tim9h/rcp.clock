@@ -11,10 +11,15 @@ import com.google.inject.Inject;
 import dev.tim9h.rcp.settings.Settings;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class TimeProperty extends SimpleStringProperty {
 
+	private static final DateTimeFormatter SECONDS_FORMATTER = DateTimeFormatter.ofPattern(":ss");
+
 	private DateTimeFormatter formatter;
+
+	private final StringProperty secondsProperty = new SimpleStringProperty();
 
 	private ScheduledFuture<?> task;
 
@@ -23,15 +28,29 @@ public class TimeProperty extends SimpleStringProperty {
 
 	private String getCurrentTimeFormatted() {
 		if (formatter == null) {
-			formatter = DateTimeFormatter.ofPattern(settings.getString(ClockView.SETTING_TIMEFORMAT));
+			var pattern = Boolean.TRUE.equals(settings.getBoolean(ClockView.SETTING_12_HOUR)) ? "hh:mm" : "HH:mm";
+			formatter = DateTimeFormatter.ofPattern(pattern);
 		}
-		return LocalTime.now(ZoneId.systemDefault()).format(formatter);
+		var time = LocalTime.now(ZoneId.systemDefault());
+		secondsProperty.set(time.format(SECONDS_FORMATTER));
+		return time.format(formatter);
+	}
+
+	public StringProperty getSecondsProperty() {
+		return secondsProperty;
+	}
+
+	public boolean isShowSeconds() {
+		return Boolean.TRUE.equals(settings.getBoolean(ClockView.SETTING_SHOW_SECONDS));
+	}
+
+	public void refresh() {
+		Platform.runLater(() -> set(getCurrentTimeFormatted()));
 	}
 
 	public synchronized void wake() {
 		sleep();
-		task = ClockScheduler.INSTANCE.scheduleAtFixedRate(
-				() -> Platform.runLater(() -> set(getCurrentTimeFormatted())), 0, 1, TimeUnit.SECONDS);
+		task = ClockScheduler.INSTANCE.scheduleAtFixedRate(this::refresh, 0, 1, TimeUnit.SECONDS);
 	}
 
 	public synchronized void sleep() {
